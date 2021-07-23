@@ -55,9 +55,7 @@ class MultiHeadSelfAttention(Layer):
 
         # Perform affine transformations to get the Queries, the Keys and the Values.
         qkv = K.dot(inputs, self.qkv_weights)  # (-1,seq_len,d_model*3)
-        print('qkv1', qkv.shape)
         qkv = K.reshape(qkv, [-1, d_model * 3])
-        print('qkv2', qkv.shape)
 
         # splitting the keys, the values and the queries.
         pre_q, pre_k, pre_v = [
@@ -96,8 +94,6 @@ class MultiHeadSelfAttention(Layer):
           or inference phase.
         """
         d_submodel = d_model // self.num_heads
-        print('d_model', d_model, 'd_submodel', d_submodel)
-        print('pre qkv', pre_q.shape, pre_k.shape, pre_v.shape)
 
         # shaping Q and V into (batch_size, num_heads, seq_len, d_model//heads)
         q = K.permute_dimensions(pre_q, [0, 2, 1, 3])
@@ -107,17 +103,13 @@ class MultiHeadSelfAttention(Layer):
         q = K.reshape(q, (-1, seq_len, d_submodel))
         k = K.reshape(k, (-1, seq_len, d_submodel))
         v = K.reshape(v, (-1, seq_len, d_submodel))
-        print('qkv', q.shape, k.shape, v.shape)
         qk = tf.einsum('aib,ajb->aij', q, k)
-        print('qk', qk.shape)
         sqrt_d = K.constant(np.sqrt(d_model // self.num_heads),
                             dtype=K.floatx())
         a = qk / sqrt_d
         a = self.mask_attention(a)
         a = K.softmax(a)
-        print('a', a.shape)
         attention_heads = tf.einsum('aij,ajb->aib', a, v)
-        print('ah', attention_heads.shape, self.num_heads, seq_len, d_model)
         attention_heads = K.reshape(attention_heads, (-1, self.num_heads, seq_len, d_submodel))
         attention_heads = K.permute_dimensions(attention_heads, [0, 2, 1, 3])
         attention_heads = K.reshape(attention_heads, (-1, seq_len, d_model))
