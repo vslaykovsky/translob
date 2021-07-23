@@ -6,16 +6,13 @@ Contains implementation of the Transformer model described in papers
 # Based on Transformer from Keras-RL
 # https://github.com/kpot/keras-transformer/blob/master/keras_transformer/transformer.py
 
-import math
-from typing import Union, Callable, Optional
+from typing import Union, Callable
 
-from keras.layers import Layer, Add, Dropout
-from tensorflow.keras.layers import InputSpec
-from keras import initializers, constraints, activations
+from keras import activations
 from keras import backend as K
-from keras.utils import get_custom_objects
+from keras.layers import Layer, Add
 
-from tLobAttention import MultiHeadSelfAttention
+from LobAttention import MultiHeadSelfAttention
 
 
 class LayerNormalization(Layer):
@@ -121,7 +118,7 @@ class TransformerTransition(Layer):
         return result
 
 
-class TransformerBlock:
+class TransformerBlock(Layer):
     """
     A pseudo-layer combining together all nuts and bolts to assemble
     a complete section of both the Transformer and the Universal Transformer
@@ -135,7 +132,7 @@ class TransformerBlock:
     - Layer normalization
     """
     def __init__(self, name: str, num_heads: int,
-                 use_masking: bool = True):
+                 use_masking: bool = True, **kwargs):
         self.attention_layer = MultiHeadSelfAttention(
             num_heads, use_masking=use_masking, 
             name=f'{name}_self_attention')
@@ -144,11 +141,12 @@ class TransformerBlock:
         self.transition_layer = TransformerTransition(
             name=f'{name}_transition', activation='relu')
         self.addition_layer = Add(name=f'{name}_add')
+        super().__init__(**kwargs)
 
-    def __call__(self, _input):
-        output = self.attention_layer(_input)
+    def call(self, x, **kwargs):
+        output = self.attention_layer(x)
         post_residual1 = (
-            self.addition_layer([_input, output]))
+            self.addition_layer([x, output]))
         norm1_output = self.norm1_layer(post_residual1)
         output = self.transition_layer(norm1_output)
         post_residual2 = (
