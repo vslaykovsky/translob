@@ -1,3 +1,5 @@
 # DS store
 
 .DS_Store
+.idea
+venv
