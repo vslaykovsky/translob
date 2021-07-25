@@ -1,3 +1,10 @@
+# Intro
+
+This is an [unsuccessful] attempt to reproduce results from the paper _Transformers for Limit Order Books_
+See python/train.py and python/translob.ipynb for implementation of the model. 
+Model trained with the best hyperparameters from the paper only produces 48 average F1 score as opposed to 91.61 promised in the paper.  
+
+
 # Code repository for TransLOB 
 
 This is the repository for the paper _Transformers for Limit Order Books_ which uses a CNN for feature extraction followed by a Transformer to predict future price movements from limit order book data. 
